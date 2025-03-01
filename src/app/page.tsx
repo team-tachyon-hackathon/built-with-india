@@ -3,15 +3,17 @@
 import { useState, useEffect } from "react"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-
+import { signOut, useSession } from "next-auth/react"
 import { WorkflowBuilder } from "@/components/workflow-builder"
 import { WorkflowHeader } from "@/components/workflow-header"
 import { Button } from "@/components/ui/button"
+import { LogOut } from "lucide-react"
 
 export default function Home() {
   const [buildItem, setBuildItem] = useState<string | null>(null)
   const [testItem, setTestItem] = useState<string | null>(null)
   const [deployItem, setDeployItem] = useState<string | null>(null)
+  const { data: session } = useSession()
 
   const handleDrop = (item: { type: string; name: string }, targetType: string) => {
     console.log(`Item dropped: ${item.name} into ${targetType}`)
@@ -40,6 +42,11 @@ export default function Home() {
     // sendWorkflowToBackend(workflow)
   }
 
+  const handleLogout = () => {
+    signOut({ callbackUrl: '/' })
+  }
+
+
   // Log state changes
   useEffect(() => {
     console.log("Current state:", { buildItem, testItem, deployItem })
@@ -48,7 +55,28 @@ export default function Home() {
   return (
     <DndProvider backend={HTML5Backend}>
       <main className="min-h-screen p-4 flex flex-col">
-        <WorkflowHeader />
+        <div className="flex justify-between items-center">
+          <WorkflowHeader />
+          {session && (
+            <div className="flex items-center gap-3">
+              <div className="text-sm">
+                <span className="font-medium">{session.user?.name}</span>
+                {session.provider && (
+                  <span className="text-gray-500 ml-2">({session.provider})</span>
+                )}
+              </div>
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1 hover:bg-gray-100"
+              >
+                <LogOut size={16} />
+                <span>Logout</span>
+              </Button>
+            </div>
+          )}
+        </div>
         <div className="flex-grow mt-8">
           <WorkflowBuilder buildItem={buildItem} testItem={testItem} deployItem={deployItem} onDrop={handleDrop} />
         </div>
@@ -59,7 +87,7 @@ export default function Home() {
     </DndProvider>
   )
 }
-
+  
 
 
 
