@@ -1,6 +1,5 @@
-// src/app/api/cicdgen/llm-generate/route.ts
+// src/app/api/cicdgen/route.ts
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import yaml from 'js-yaml';
 
 interface NodeConfig {
@@ -36,16 +35,9 @@ type CIProvider = 'github-actions' | 'gitlab-ci' | 'jenkins';
 
 export async function POST(request: Request) {
   try {
-    const { apiKey, repoInfo, nodes, edges, ciProvider } = await request.json();
+    const { repoInfo, nodes, edges, ciProvider } = await request.json();
 
     // Validation
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'API key is required' },
-        { status: 400 }
-      );
-    }
-
     if (!repoInfo) {
       return NextResponse.json(
         { error: 'Repository information is required' },
@@ -60,12 +52,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create DeepSeek client
-    const openai = new OpenAI({
-      baseURL: 'https://api.deepseek.com',
-      apiKey,
-    });
-
+    // Use Gemini API - check for API key
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY environment variable is not set');
+      return NextResponse.json(
+        { error: 'API key configuration error' },
+        { status: 500 }
+      );
+    }
+    
     // Convert pipeline design to structured description
     const pipelineDescription = generatePipelineDescription(nodes, edges, ciProvider);
 
@@ -84,21 +79,44 @@ Return ONLY valid YAML with NO additional explanation, comments, or markdown for
 The YAML should be production-ready and follow best practices for ${ciProvider}.
 `;
 
-    // Make API call to DeepSeek
-    const completion = await openai.chat.completions.create({
-      messages: [
-        { role: "system", content: "You are an expert CI/CD DevOps engineer. Your task is to generate production-ready CI/CD pipeline configurations." },
-        { role: "user", content: prompt }
-      ],
-      model: "deepseek-chat",
+    // Make API call to Gemini API
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: prompt
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 8192
+        }
+      })
     });
 
-    // Extract YAML from response
-    const generatedYaml = completion.choices[0].message.content.trim();
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Gemini API error: ${response.status} ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    
+    // Extract the response text from the Gemini API response
+    const generatedYaml = data.candidates[0].content.parts[0].text;
     
     return NextResponse.json({ yaml: generatedYaml });
   } catch (error: any) {
-    console.error('Error generating pipeline with LLM:', error);
+    console.error('Error generating pipeline with Gemini API:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to generate pipeline' },
       { status: 500 }
@@ -113,8 +131,6 @@ The YAML should be production-ready and follow best practices for ${ciProvider}.
  * @param ciProvider The CI/CD provider (github-actions, gitlab-ci, jenkins)
  * @returns A formatted string description of the pipeline
  */
-
-
 function generatePipelineDescription(nodes: Node[], edges: Edge[], ciProvider: CIProvider): string {
   // Skip the start node
   const pipelineNodes = nodes.filter(node => node.id !== 'start' && node.type !== 'input');
