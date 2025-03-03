@@ -7,9 +7,10 @@ import { getToken } from 'next-auth/jwt';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Check if this is an API authentication route
+  // Check if this is an API authentication route or a test API route
   // We should skip middleware for auth API routes to avoid infinite loops
-  if (pathname.startsWith('/api/auth')) {
+  // Also skip for api-test routes to allow testing without authentication
+  if (pathname.startsWith('/api/auth') || pathname.startsWith('/api-test')) {
     return NextResponse.next();
   }
   
@@ -65,11 +66,12 @@ export const config = {
     /*
      * Match all paths except for:
      * 1. /api/auth routes (to avoid infinite auth redirects)
-     * 2. /_next (Next.js internals)
-     * 3. /fonts, /images (static resources)
-     * 4. /*.png, /*.jpg, etc. (static files)
-     * 5. /favicon.ico (browser resources)
+     * 2. /api-test routes (for testing without authentication)
+     * 3. /_next (Next.js internals)
+     * 4. /fonts, /images (static resources)
+     * 5. /*.png, /*.jpg, etc. (static files)
+     * 6. /favicon.ico (browser resources)
      */
-    '/((?!api/auth|_next|fonts|images|[\\w-]+\\.\\w+).*)',
+    '/((?!api/auth|api-test|_next|fonts|images|[\\w-]+\\.\\w+).*)',
   ],
 };
