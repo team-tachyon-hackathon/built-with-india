@@ -8,6 +8,169 @@ export function WorkflowBuilder(){
   const [showTestOptions, setShowTestOptions] = useState(false);
   const [showDeployOptions, setShowDeployOptions] = useState(false);
 
+  const generateWorkflow = () => {
+    if (!diagramRef.current) return;
+    
+    const diagram = diagramRef.current;
+    const model = diagram.model as go.GraphLinksModel;
+    
+    // Define TypeScript interfaces for our workflow JSON structure
+    interface NodeData {
+      name: string;
+      config: Record<string, any>;
+    }
+    
+    interface WorkflowNode {
+      id: string;
+      type: string;
+      data: NodeData;
+      position: { x: number; y: number };
+    }
+    
+    interface WorkflowEdge {
+      id: string;
+      source: string;
+      target: string;
+    }
+    
+    interface WorkflowJson {
+      repoInfo: string;
+      nodes: WorkflowNode[];
+      edges: WorkflowEdge[];
+      ciProvider: string;
+    }
+    
+    // Create the workflow JSON structure
+    const workflowJson: WorkflowJson = {
+      repoInfo: "Repository: my-microservice-app\nLanguage: TypeScript\nFramework: NextJS",
+      nodes: [],
+      edges: [],
+      ciProvider: "github-actions"
+    };
+    
+    // Map GoJS nodes to workflow nodes
+    const nodes: WorkflowNode[] = model.nodeDataArray.map((nodeData: any, index: number) => {
+      // Determine node type based on the key
+      let nodeType = "buildNode"; // default
+      if (nodeData.key.includes("Test")) {
+        nodeType = "testNode";
+      } else if (nodeData.key.includes("Deploy")) {
+        nodeType = "deployNode";
+      }
+      
+      // Get node position if available
+      const node = diagram.findNodeForData(nodeData);
+      const position = node ? { x: node.location.x, y: node.location.y } : { x: 250, y: index * 100 };
+      
+      // Create node configuration based on type
+      let config: Record<string, any> = {};
+      
+      if (nodeType === "buildNode") {
+        config = {
+          image: nodeData.key.includes("Docker") ? "docker:20.10.16" : "node:18-alpine",
+          commands: [
+            "npm ci",
+            nodeData.key.includes("Docker") ? "docker build -t app:${GITHUB_SHA} ." : "npm run build"
+          ]
+        };
+      } else if (nodeType === "testNode") {
+        config = {
+          framework: nodeData.key.includes("Unit") ? "Jest" : 
+                    nodeData.key.includes("Integration") ? "Jest" : 
+                    nodeData.key.includes("E2E") ? "Cypress" : "Custom",
+          commands: [
+            nodeData.key.includes("Unit") ? "npm run test:unit" : 
+            nodeData.key.includes("Integration") ? "npm run test:integration" :
+            nodeData.key.includes("E2E") ? "npm run test:e2e" : "npm run test"
+          ]
+        };
+      } else if (nodeType === "deployNode") {
+        config = {
+          environment: nodeData.key.includes("Production") ? "production" : "staging",
+          method: nodeData.key.includes("AWS") ? "AWS ECS" : 
+                 nodeData.key.includes("Azure") ? "Azure Web App" :
+                 nodeData.key.includes("GCP") ? "GCP Cloud Run" : "Kubernetes"
+        };
+      }
+      
+      return {
+        id: `n${index + 1}`,
+        type: nodeType,
+        data: {
+          name: nodeData.key,
+          config: config
+        },
+        position: position
+      };
+    });
+    
+    // Add a start node
+    nodes.unshift({
+      id: "start",
+      type: "input",
+      data: { 
+        name: "Start",
+        config: {} // Add empty config to satisfy the type requirement
+      },
+      position: { x: 250, y: 0 }
+    });
+    
+    // Map GoJS links to workflow edges
+    const nodeIdMap = new Map<string, string>();
+    nodes.forEach(node => {
+      nodeIdMap.set(node.data.name, node.id);
+    });
+    
+    const edges: WorkflowEdge[] = [];
+    model.linkDataArray.forEach((linkData: any, index: number) => {
+      const fromNode = model.findNodeDataForKey(linkData.from);
+      const toNode = model.findNodeDataForKey(linkData.to);
+      
+      if (fromNode && toNode) {
+        // Find the corresponding IDs in our nodes array
+        const fromId = fromNode.key === "Start" ? "start" : 
+                      nodeIdMap.get(fromNode.key) || `n${nodes.findIndex(n => n.data.name === fromNode.key) + 1}`;
+        const toId = toNode.key === "Start" ? "start" : 
+                    nodeIdMap.get(toNode.key) || `n${nodes.findIndex(n => n.data.name === toNode.key) + 1}`;
+        
+        edges.push({
+          id: `e${index + 1}`,
+          source: fromId,
+          target: toId
+        });
+      }
+    });
+    
+    // If there's no link from start to the first node, add one
+    if (edges.length > 0 && !edges.some(e => e.source === "start")) {
+      if (nodes.length > 1) {
+        edges.unshift({
+          id: "e0",
+          source: "start",
+          target: nodes[1].id // First non-start node
+        });
+      }
+    }
+    
+    // Update the workflow object
+    workflowJson.nodes = nodes;
+    workflowJson.edges = edges;
+    
+    // Log and download the JSON
+    console.log("Generated Workflow JSON:", workflowJson);
+    
+    // Create a download link
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(workflowJson, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "workflow.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    
+    return workflowJson;
+  };
+
   const buildOptions = [
     'Docker Build',
     'NPM Build',
@@ -383,13 +546,22 @@ export function WorkflowBuilder(){
               Delete Selected
             </button>
             <button
-              className="flex items-center w-full px-4 py-2 bg-white text-gray-600 border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none"
+              className="flex items-center w-full px-4 py-2 mb-2 bg-white text-gray-600 border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none"
               onClick={clearDiagram}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
               </svg>
               Clear All
+            </button>
+            <button
+              className="flex items-center w-full px-4 py-2 bg-green-600 text-white border border-green-700 rounded-md shadow-sm hover:bg-green-700 focus:outline-none"
+              onClick={generateWorkflow}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+              Generate Workflow
             </button>
           </div>
           
