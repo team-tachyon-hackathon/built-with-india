@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { signOut, useSession } from "next-auth/react"
-import { WorkflowBuilder } from "@/components/workflow-builder"
+import {WorkflowBuilder} from "@/components/workflow-builder"
 import { WorkflowHeader } from "@/components/workflow-header"
 import { Button } from "@/components/ui/button"
 import { LogOut, Moon, Sun } from "lucide-react"
@@ -144,12 +144,12 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mb-8">
+        {/* <div className="mb-8">
           <WorkflowHeader />
-        </div>
+        </div> */}
 
         <div className="flex-grow mt-8 mb-12">
-          <WorkflowBuilder buildItem={buildItem} testItem={testItem} deployItem={deployItem} onDrop={handleDrop} />
+          <WorkflowBuilder/>
         </div>
 
         <div className="flex justify-center">
@@ -164,4 +164,3 @@ export default function Home() {
     </DndProvider>
   )
 }
-
