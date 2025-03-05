@@ -18,7 +18,7 @@ export default function SignIn() {
   }
 
   return (
-    <BackgroundPaths title="Built-with-India">
+    <BackgroundPaths title="CI/CD Genie">
       <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md space-y-8 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md p-8 rounded-2xl shadow-xl">
           <div>

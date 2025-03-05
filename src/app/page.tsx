@@ -151,15 +151,6 @@ export default function Home() {
         <div className="flex-grow mt-8 mb-12">
           <WorkflowBuilder/>
         </div>
-
-        <div className="flex justify-center">
-          <Button
-            onClick={handleSaveWorkflow}
-            className="px-8 py-6 rounded-lg text-lg font-medium shadow-lg hover:shadow-xl transition-all"
-          >
-            Generate Workflow
-          </Button>
-        </div>
       </main>
     </DndProvider>
   )
