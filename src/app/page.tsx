@@ -5,7 +5,7 @@ import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { signOut, useSession } from "next-auth/react"
 import {WorkflowBuilder} from "@/components/WorkFlowBuilder/WorkflowBuilder"
-import { WorkflowHeader } from "@/components/workflow-header"
+// import { WorkflowHeader } from "@/components/workflow-header"
 import { Button } from "@/components/ui/button"
 import { LogOut, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
@@ -27,16 +27,16 @@ export default function Home() {
     console.log("Current theme:", theme)
   }, [theme])
 
-  const handleDrop = (item: { type: string; name: string }, targetType: string) => {
-    console.log(`Item dropped: ${item.name} into ${targetType}`)
-    if (item.type === "build" && targetType === "build") {
-      setBuildItem(item.name)
-    } else if (item.type === "test" && targetType === "test") {
-      setTestItem(item.name)
-    } else if (item.type === "deploy" && targetType === "deploy") {
-      setDeployItem(item.name)
-    }
-  }
+  // const handleDrop = (item: { type: string; name: string }, targetType: string) => {
+  //   console.log(`Item dropped: ${item.name} into ${targetType}`)
+  //   if (item.type === "build" && targetType === "build") {
+  //     setBuildItem(item.name)
+  //   } else if (item.type === "test" && targetType === "test") {
+  //     setTestItem(item.name)
+  //   } else if (item.type === "deploy" && targetType === "deploy") {
+  //     setDeployItem(item.name)
+  //   }
+  // }
 
   const getSelectedWorkflow = () => {
     return {
@@ -46,11 +46,11 @@ export default function Home() {
     }
   }
 
-  const handleSaveWorkflow = () => {
-    const workflow = getSelectedWorkflow()
-    console.log("Selected Workflow:", workflow)
-    // Here you would typically send this data to your backend
-  }
+  // const handleSaveWorkflow = () => {
+  //   const workflow = getSelectedWorkflow()
+  //   console.log("Selected Workflow:", workflow)
+  //   // Here you would typically send this data to your backend
+  // }
 
   const handleLogout = () => {
     signOut({ callbackUrl: "/" })

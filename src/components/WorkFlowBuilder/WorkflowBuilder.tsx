@@ -1,12 +1,12 @@
 "use client"
-import * as go from 'gojs';
-import { useEffect, useRef, useState } from 'react';
+
+import {useState } from 'react';
 import axios from 'axios';
 import DiagramCanvas from './components/DiagramCanvas';
 import ComponentsSidebar from './components/ComponentsSidebar';
 import RepositoryAnalyzer from './components/RepositoryAnalyzer';
 import GenerateConfigModal from './components/GenerateConfigModal';
-import { WorkflowNode, WorkflowLink, AnalysisData, DiagramRef, WorkflowJson } from './types';
+import {AnalysisData} from './types';
 import { useDiagram } from './hooks/useDiagram';
 import { useWorkflowGenerator } from './hooks/useWorkflowGenerator';
 
@@ -68,9 +68,13 @@ export function WorkflowBuilder() {
       
       // Auto-populate workflow based on repo analysis
       populateWorkflowFromAnalysis(analysisData);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Repository analysis error:', err);
-      setError(err.response?.data?.error || 'Failed to analyze repository. Please check your credentials and try again.');
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.error || 'Failed to analyze repository. Please check your credentials and try again.');
+      } else {
+        setError('An unexpected error occurred during repository analysis.');
+      }
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,6 @@
 // src/app/api/cicdgen/route.ts
 import { NextResponse } from 'next/server';
-import yaml from 'js-yaml';
+
 
 interface NodeConfig {
   image?: string;

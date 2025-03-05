@@ -1,7 +1,7 @@
 // hooks/useDiagram.ts
 import { useRef, useEffect } from 'react';
 import * as go from 'gojs';
-import { AnalysisData, DiagramRef } from '../types';
+import { AnalysisData} from '../types';
 
 export function useDiagram() {
   // Diagram reference
@@ -252,7 +252,7 @@ export function useDiagram() {
     yPosition += 100;
     
     // Install dependencies node
-    const hasDependencies = analysisData.packageManager !== "Unknown";
+    // const hasDependencies = analysisData.packageManager !== "Unknown";
     const dependencyStep = { 
       key: analysisData.packageManager.includes("Node.js") ? "NPM Install" : 
            analysisData.packageManager.includes("Python") ? "Pip Install" :
