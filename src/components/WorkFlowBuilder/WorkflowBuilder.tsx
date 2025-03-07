@@ -50,16 +50,17 @@ export function WorkflowBuilder() {
     setRepoData(null);
 
     try {
-      // Use axios for API calls based on repository type
+      // Use axios for API calls based on repository type with timeout
       let response;
+      const requestConfig = {
+        params: { owner: repoOwner, repo: repoName },
+        timeout: 240000 // 120 second timeout
+      };
+      
       if (repoType === 'github') {
-        response = await axios.get('/api/github/analyze', {
-          params: { owner: repoOwner, repo: repoName }
-        });
+        response = await axios.get('/api/github/analyze', requestConfig);
       } else {
-        response = await axios.get('/api/gitlab/analyze', {
-          params: { owner: repoOwner, repo: repoName }
-        });
+        response = await axios.get('/api/gitlab/analyze', requestConfig);
       }
       
       const analysisData = response.data;
@@ -70,7 +71,17 @@ export function WorkflowBuilder() {
       populateWorkflowFromAnalysis(analysisData);
     } catch (err: any) {
       console.error('Repository analysis error:', err);
-      setError(err.response?.data?.error || 'Failed to analyze repository. Please check your credentials and try again.');
+      
+      // Handle different error types with clearer messages
+      if (err.code === 'ECONNABORTED' || (err.response && err.response.status === 504)) {
+        setError('Repository analysis timed out. The repository might be too large or the server is experiencing high load. Please try again later or try with a smaller repository.');
+      } else if (err.response && err.response.status === 404) {
+        setError('Repository not found. Please check the owner and repository name.');
+      } else if (err.response && err.response.status === 403) {
+        setError('Access denied. You might not have permission to access this repository or API rate limit exceeded.');
+      } else {
+        setError(err.response?.data?.error || 'Failed to analyze repository. Please check your credentials and try again.');
+      }
     } finally {
       setIsLoading(false);
     }

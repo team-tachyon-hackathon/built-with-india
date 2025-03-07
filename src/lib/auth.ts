@@ -47,7 +47,7 @@ export async function getProviderToken() {
 }
 
 // Client-side: Custom hook with loading and required states
-export function useAuth({ required = false } = {}) {
+export function useAuth({}) {
   const { data: session, status } = useNextAuthSession();
   const loading = status === "loading";
   const authenticated = !!session;
