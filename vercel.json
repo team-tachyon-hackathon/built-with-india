@@ -1,0 +1,7 @@
+{
+    "functions": {
+      "api/github/analyze.js": {
+        "maxDuration": 60
+      }
+    }
+  }
