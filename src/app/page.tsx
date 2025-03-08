@@ -8,6 +8,8 @@ import {WorkflowBuilder} from "@/components/WorkFlowBuilder/WorkflowBuilder"
 import { Button } from "@/components/ui/button"
 import { LogOut, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
+import Link from 'next/link';
+
 
 export default function Home() {
   const [buildItem, setBuildItem] = useState<string | null>(null)
@@ -98,7 +100,7 @@ export default function Home() {
                     {session.user?.name?.charAt(0) || "U"}
                   </div>
                   <div className="text-sm">
-                    <span className="font-medium">{session.user?.name}</span>
+                    <Link href="/dashboard" className="font-medium">{session.user?.name}</Link >
                     {session.provider && (
                       <span className="text-muted-foreground ml-2 text-xs">({session.provider})</span>
                     )}
