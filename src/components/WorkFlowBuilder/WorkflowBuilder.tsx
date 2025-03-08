@@ -54,7 +54,9 @@ export function WorkflowBuilder() {
       let response;
       const requestConfig = {
         params: { owner: repoOwner, repo: repoName },
+
         timeout: 240000 // 120 second timeout
+
       };
       
       if (repoType === 'github') {
@@ -126,12 +128,21 @@ export function WorkflowBuilder() {
         ciProvider: selectedProvider
       });
 
+      // Get project name from response if available
+      const projectName = response.data.projectName || repoData.repo.split('/').pop() || '';
+
       // Update with the generated YAML
       setGeneratedConfig({
         yaml: response.data.yaml,
         loading: false,
         error: null
       });
+
+      // Store in localStorage immediately
+      localStorage.setItem('generatedCicdYaml', response.data.yaml);
+      localStorage.setItem('cicdProvider', selectedProvider);
+      localStorage.setItem('cicdProjectName', projectName);
+      localStorage.setItem('savedAt', new Date().toISOString());
     } catch (err: any) {
       console.error('CI/CD configuration generation error:', err);
       setGeneratedConfig({
@@ -190,6 +201,7 @@ export function WorkflowBuilder() {
           yaml={generatedConfig.yaml}
           provider={selectedProvider}
           onClose={closeConfigModal}
+          projectName={repoData ? repoData.repo.split('/').pop() || '' : ''}
         />
       )}
     </div>

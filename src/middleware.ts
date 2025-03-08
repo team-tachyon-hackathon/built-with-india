@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
     pathname === '/auth/signin' ||
     pathname.startsWith('/api/public') || 
     pathname.startsWith('/_next') ||
-    pathname.includes('.') // For static files
+    pathname.includes('.'); // For static files
   
   // Get the session token
   const token = await getToken({
@@ -44,7 +44,7 @@ export async function middleware(request: NextRequest) {
   
   // Add user info to headers for use in server components if needed
   const response = NextResponse.next();
-  
+
   // Optional: Add user info to response headers
   if (isAuthenticated && token.email) {
     response.headers.set('x-user-email', token.email as string);
@@ -55,7 +55,7 @@ export async function middleware(request: NextRequest) {
       response.headers.set('x-auth-provider', token.provider as string);
     }
   }
-  
+
   return response;
 }
 
@@ -63,15 +63,6 @@ export async function middleware(request: NextRequest) {
 // This is more maintainable than listing all protected routes
 export const config = {
   matcher: [
-    /*
-     * Match all paths except for:
-     * 1. /api/auth routes (to avoid infinite auth redirects)
-     * 2. /api-test routes (for testing without authentication)
-     * 3. /_next (Next.js internals)
-     * 4. /fonts, /images (static resources)
-     * 5. /*.png, /*.jpg, etc. (static files)
-     * 6. /favicon.ico (browser resources)
-     */
     '/((?!api/auth|api-test|_next|fonts|images|[\\w-]+\\.\\w+).*)',
   ],
 };

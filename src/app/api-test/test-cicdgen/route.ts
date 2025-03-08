@@ -115,7 +115,30 @@ The YAML should be production-ready and follow best practices for ${ciProvider}.
     // Extract the response text from the Gemini API response
     const generatedYaml = data.candidates[0].content.parts[0].text;
     
-    return NextResponse.json({ yaml: generatedYaml });
+    // Extract project name from repository info if available
+    let projectName = '';
+    const repoInfoLines = repoInfo.split('\n');
+    for (const line of repoInfoLines) {
+      if (line.startsWith('Repository:')) {
+        const parts = line.split(':');
+        if (parts.length > 1) {
+          const repoPath = parts[1].trim();
+          const lastPathSegment = repoPath.split('/').pop();
+          if (lastPathSegment) {
+            projectName = lastPathSegment.trim();
+          }
+        }
+        break;
+      }
+    }
+    
+    // Store the generated YAML and project name in local storage (client-side only)
+    const responseObj = { 
+      yaml: generatedYaml,
+      projectName: projectName
+    };
+    
+    return NextResponse.json(responseObj);
   } catch (error: any) {
     console.error('Error generating pipeline with Gemini API:', error);
     return NextResponse.json(
