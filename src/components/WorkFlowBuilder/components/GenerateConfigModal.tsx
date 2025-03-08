@@ -1,15 +1,32 @@
 // components/GenerateConfigModal.tsx
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { GenerateConfigModalProps } from '../types';
+import axios from 'axios';
+import Link from 'next/link';
 
 const GenerateConfigModal: React.FC<GenerateConfigModalProps> = ({
   loading,
   error,
   yaml,
   provider,
-  onClose
+  onClose,
+  projectName
 }) => {
   const codeRef = useRef<HTMLPreElement>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [customProjectName, setCustomProjectName] = useState(projectName || '');
+
+  // Store YAML in localStorage when it's received
+  useEffect(() => {
+    if (yaml && !loading) {
+      localStorage.setItem('generatedCicdYaml', yaml);
+      localStorage.setItem('cicdProvider', provider);
+      localStorage.setItem('cicdProjectName', projectName || '');
+      localStorage.setItem('savedAt', new Date().toISOString());
+    }
+  }, [yaml, loading, provider, projectName]);
 
   // Copy to clipboard
   const copyToClipboard = () => {
@@ -57,6 +74,66 @@ const GenerateConfigModal: React.FC<GenerateConfigModalProps> = ({
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  // Show project name prompt
+  const handleSaveClick = () => {
+    // Check if there's a saved project name in localStorage
+    const savedProjectName = localStorage.getItem('cicdProjectName') || projectName || '';
+    setCustomProjectName(savedProjectName);
+    setShowNamePrompt(true);
+  };
+
+  // Cancel name prompt
+  const handleCancelPrompt = () => {
+    setShowNamePrompt(false);
+  };
+
+  // Save for later to MongoDB
+  const saveForLater = async () => {
+    if (!yaml) return;
+    
+    // Close the name prompt
+    setShowNamePrompt(false);
+    
+    // Update the project name in localStorage
+    localStorage.setItem('cicdProjectName', customProjectName);
+    
+    setSaveStatus('saving');
+    setSaveError(null);
+    
+    try {
+      // Get all data from localStorage
+      const storedYaml = localStorage.getItem('generatedCicdYaml') || yaml;
+      const storedProvider = localStorage.getItem('cicdProvider') || provider;
+      const storedSavedAt = localStorage.getItem('savedAt') || new Date().toISOString();
+      
+      const response = await axios.post('/api/save-config', {
+        yaml: storedYaml,
+        provider: storedProvider,
+        projectName: customProjectName || 'Unnamed Project',
+        savedAt: storedSavedAt
+      });
+      
+      // Clear from localStorage after saving to MongoDB
+      localStorage.removeItem('generatedCicdYaml');
+      localStorage.removeItem('cicdProvider');
+      localStorage.removeItem('cicdProjectName');
+      localStorage.removeItem('savedAt');
+      
+      setSaveStatus('success');
+      
+      // Reset status after 3 seconds
+      setTimeout(() => {
+        if (setSaveStatus) {
+          setSaveStatus('idle');
+        }
+      }, 3000);
+    } catch (err: any) {
+      console.error('Failed to save configuration:', err);
+      setSaveStatus('error');
+      setSaveError(err.response?.data?.message || 'Failed to save configuration');
+    }
   };
 
   // Get provider display name
@@ -129,6 +206,24 @@ const GenerateConfigModal: React.FC<GenerateConfigModalProps> = ({
               >{yaml}</pre>
             </div>
           )}
+          
+          {/* Save Status Messages */}
+          {saveStatus === 'success' && (
+            <div className="mt-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4">
+              <p className="font-bold">Success</p>
+              <p>Configuration saved for later access.</p>
+              <Link href="/saved-configs" className="text-green-800 hover:text-green-900 underline mt-1 inline-block">
+                View Saved Configurations
+              </Link>
+            </div>
+          )}
+          
+          {saveStatus === 'error' && (
+            <div className="mt-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
+              <p className="font-bold">Save Error</p>
+              <p>{saveError || 'Failed to save configuration.'}</p>
+            </div>
+          )}
         </div>
         
         {/* Footer */}
@@ -143,16 +238,71 @@ const GenerateConfigModal: React.FC<GenerateConfigModalProps> = ({
             onClick={copyToClipboard}
             id="copy-button"
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none mr-2"
+            disabled={loading || !yaml}
           >
             Copy to Clipboard
           </button>
           <button 
             onClick={downloadFile}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none"
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none mr-2"
+            disabled={loading || !yaml}
           >
             Download
           </button>
+          <button 
+            onClick={handleSaveClick}
+            className={`px-4 py-2 rounded focus:outline-none ${
+              saveStatus === 'saving' ? 'bg-gray-400 text-white' :
+              saveStatus === 'success' ? 'bg-green-600 text-white' :
+              'bg-indigo-600 text-white hover:bg-indigo-700'
+            }`}
+            disabled={loading || !yaml || saveStatus === 'saving' || saveStatus === 'success'}
+          >
+            {saveStatus === 'saving' ? (
+              <div className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving...
+              </div>
+            ) : saveStatus === 'success' ? 'Saved!' : 'Save for Later'}
+          </button>
         </div>
+
+        {/* Project Name Prompt Modal */}
+        {showNamePrompt && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Name Your Project</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Give your configuration a name to help you identify it later.
+              </p>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mb-4"
+                placeholder="Enter project name"
+                value={customProjectName}
+                onChange={(e) => setCustomProjectName(e.target.value)}
+                autoFocus
+              />
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={handleCancelPrompt}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 focus:outline-none"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveForLater}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

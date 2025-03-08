@@ -109,4 +109,5 @@ export interface GenerateConfigModalProps {
   yaml: string;
   provider: CICDProvider;
   onClose: () => void;
+  projectName: string;
 }
