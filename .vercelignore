@@ -1,0 +1,19 @@
+# Testing
+/tests
+/coverage
+/test
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Development files
+.github
+README.md
+.eslintrc
+.prettierrc
+*.log
+
+# Local environment
+.env.local
+.env.development

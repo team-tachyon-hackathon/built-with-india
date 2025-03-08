@@ -54,7 +54,9 @@ export function WorkflowBuilder() {
       let response;
       const requestConfig = {
         params: { owner: repoOwner, repo: repoName },
-        timeout: 240000 // 240 second timeout
+
+        timeout: 240000 // 120 second timeout
+
       };
       
       if (repoType === 'github') {

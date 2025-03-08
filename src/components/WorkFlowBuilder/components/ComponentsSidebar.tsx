@@ -1,6 +1,6 @@
 // components/ComponentsSidebar.tsx
-import React, { useState } from 'react';
-import { ComponentsSidebarProps, CICDProvider } from '../types';
+
+import { ComponentsSidebarProps} from '../types';
 import ComponentDropdown from './ComponentDropdown';
 import ActionButton from './ActionButton';
 
@@ -91,6 +91,8 @@ const ComponentsSidebar: React.FC<ComponentsSidebarProps> = ({
     { id: 'jenkins', name: 'Jenkins' }
   ];
 
+  type CICDProvider = 'github-actions' | 'gitlab-ci' | 'jenkins';
+
   // Generate Config Icon
   const generateConfigIcon = (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -179,15 +181,17 @@ const ComponentsSidebar: React.FC<ComponentsSidebarProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-1">CI/CD Provider</label>
           <select
             value={selectedProvider}
-            onChange={(e) => setSelectedProvider(e.target.value as any)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+            setSelectedProvider(e.target.value as CICDProvider)
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
           >
             {cicdProviders.map(provider => (
-              <option key={provider.id} value={provider.id}>
-                {provider.name}
-              </option>
-            ))}
-          </select>
+            <option key={provider.id} value={provider.id}>
+          {provider.name}
+          </option>
+          ))}
+        </select>
         </div>
         
         {/* Generate CI/CD Config Button */}
