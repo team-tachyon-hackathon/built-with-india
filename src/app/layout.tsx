@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Providers>
-        <ThemeProvider >
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             {children}
         </ThemeProvider>
           </Providers>

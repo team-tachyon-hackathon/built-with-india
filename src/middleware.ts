@@ -17,6 +17,7 @@ export async function middleware(request: NextRequest) {
   // Define public paths that don't require authentication
   const isPublicPath = 
     pathname === '/auth/signin' ||
+    pathname === '/about'||
     pathname.startsWith('/api/public') || 
     pathname.startsWith('/_next') ||
     pathname.includes('.') // For static files

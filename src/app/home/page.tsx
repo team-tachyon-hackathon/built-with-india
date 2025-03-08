@@ -2,41 +2,28 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-// import { useRouter } from 'next/navigation';
-import { signIn } from "next-auth/react";
-import { Github, GitlabIcon, GithubIcon } from "lucide-react";
-import RobotIcon from "@/components/ui/robot.jsx";
+import { useRouter } from 'next/navigation';
+// import { useInView } from 'framer-motion';
 
-const LandingPage: React.FC = () => {
+const HomePage: React.FC = () => {
+  const [showDropdown, setShowDropdown] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [showAuthOptions, setShowAuthOptions] = useState(false);
-  // const router = useRouter();
-  
-  const [isLoading, setIsLoading] = useState({
-    github: false,
-    gitlab: false,
-    bitbucket: false,
-  });
+  const router = useRouter();
   
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   const handleLogin = () => {
-    setShowAuthOptions(true);
+    if (isMounted) {
+      router.push('/login');
+    }
   };
 
   const handleSignUp = () => {
-    setShowAuthOptions(true);
-  };
-  
-  const handleSignIn = async (provider: "github" | "gitlab" | "bitbucket") => {
-    setIsLoading((prev) => ({ ...prev, [provider]: true }));
-    await signIn(provider, { callbackUrl: "/" });
-  };
-  
-  const closeAuthOptions = () => {
-    setShowAuthOptions(false);
+    if (isMounted) {
+      router.push('/signup');
+    }
   };
 
   return (
@@ -110,16 +97,49 @@ const LandingPage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <div className="relative">
-            <motion.div
-              className="hidden md:flex items-center gap-6 ml-6"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Link href="/about" className="hover:text-indigo-300 transition-colors">
+              <motion.button
+                className="text-lg px-2 py-1 flex items-center gap-1"
+                onClick={() => setShowDropdown(!showDropdown)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
                 About
-              </Link>
-            </motion.div>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </motion.button>
+              
+              {showDropdown && (
+                <motion.div 
+                  className="absolute top-full right-0 bg-gray-900 rounded-md shadow-lg py-2 w-40 z-50"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Link href="/about" className="block px-4 py-2 hover:bg-indigo-900 transition-colors">
+                    Company
+                  </Link>
+                  <Link href="/services" className="block px-4 py-2 hover:bg-indigo-900 transition-colors">
+                    Services
+                  </Link>
+                  <Link href="/team" className="block px-4 py-2 hover:bg-indigo-900 transition-colors">
+                    Team
+                  </Link>
+                </motion.div>
+              )}
             </div>
 
             <motion.div
@@ -130,6 +150,9 @@ const LandingPage: React.FC = () => {
             >
               <Link href="/" className="hover:text-indigo-300 transition-colors">
                 Home
+              </Link>
+              <Link href="/doc" className="hover:text-indigo-300 transition-colors">
+                Doc
               </Link>
             </motion.div>
 
@@ -166,7 +189,26 @@ const LandingPage: React.FC = () => {
                 repeatType: "reverse" 
               }}
             >
-              <RobotIcon/>
+              <img 
+                src="/robot-icon.svg" 
+                alt="Robot Icon" 
+                className="w-24 h-24 mx-auto drop-shadow-lg"
+                onError={(e) => {
+                  // Fallback to inline SVG if external SVG fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.outerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="drop-shadow-lg">
+                      <rect x="3" y="11" width="18" height="10" rx="2" />
+                      <circle cx="12" cy="5" r="2" />
+                      <path d="M12 7v4" />
+                      <line x1="8" y1="16" x2="8" y2="16" />
+                      <line x1="16" y1="16" x2="16" y2="16" />
+                      <path d="M9 21v-2" />
+                      <path d="M15 21v-2" />
+                    </svg>
+                  `;
+                }}
+              />
             </motion.div>
           </motion.div>
 
@@ -185,8 +227,9 @@ const LandingPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.4 }}
           >
-            <b>Build, customize, and deploy with confidence.</b> Our intelligent engine analyzes your repository, recommends optimized workflows, 
-            and generates production-ready configuration files for <b>GitHub Actions, GitLab CI, or Jenkins</b> - all with just a few clicks.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna
+            aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur
           </motion.p>
 
           <motion.div
@@ -245,7 +288,7 @@ const LandingPage: React.FC = () => {
       {/* Features Section - with distinct visual separation */}
       <section className="relative py-24 px-6">
         {/* Features background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#160024] to-black z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-900 to-black z-0"></div>
         
         <div className="relative z-10 max-w-7xl mx-auto">
           <motion.h2 
@@ -255,7 +298,7 @@ const LandingPage: React.FC = () => {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.7 }}
           >
-            <span className="inline-block bg-clip-text text-transparent bg-gradient-to-r from-[#FFFFFF] to-[#ffffff]">
+            <span className="inline-block bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 to-indigo-500">
               Our Features
             </span>
           </motion.h2>
@@ -270,18 +313,15 @@ const LandingPage: React.FC = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <motion.div 
-                className="bg-indigo-200 text-black text-2xl rounded-md px-4 py-1 font-medium inline-block mb-4"
+                className="bg-indigo-200 text-indigo-900 rounded-md px-4 py-1 text-sm font-medium inline-block mb-4"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                 Visual Workflow Builder
+                LorenIpsum
               </motion.div>
               <div className="bg-gray-800 rounded-lg p-6 h-full border border-gray-700 shadow-xl">
                 <p className="text-gray-200 leading-relaxed">
-                With its intuitive user interface, setting up automated pipelines becomes a breeze, allowing your team to focus on what they 
-                do best—building innovative solutions. The Genie automates repetitive tasks, ensuring that every code change is tested,
-                 built, and deployed efficiently and reliably. Our drag-and-drop workflow editor makes complex CI/CD configuration
-                  accessible to everyone on your team, regardless of their DevOps experience.
+                  With its intuitive user interface, setting up automated pipelines becomes a breeze, allowing your team to focus on what they do best—building innovative solutions. The Genie automates repetitive tasks, ensuring that every code change is tested, built, and deployed efficiently and reliably. Thanks to its robust notification system,
                 </p>
               </div>
             </motion.div>
@@ -295,17 +335,15 @@ const LandingPage: React.FC = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <motion.div 
-                className="bg-indigo-200 text-black text-2xl rounded-md px-4 py-1 font-medium inline-block mb-4"
+                className="bg-indigo-200 text-indigo-900 rounded-md px-4 py-1 text-sm font-medium inline-block mb-4"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Intelligent Repository Analysis
+                LorenIpsum
               </motion.div>
               <div className="bg-gray-800 rounded-lg p-6 h-full border border-gray-700 shadow-xl">
                 <p className="text-gray-200 leading-relaxed">
-                With its intuitive user interface, setting up automated pipelines becomes a 
-                breeze, allowing your team to focus on what they do best—building innovative solutions. The Genie automates repetitive tasks, ensuring that every code change is tested, built, and deployed efficiently and reliably. Our smart repository analyzer automatically detects your project structure, technologies, and existing workflows to
-                 recommend optimized CI/CD configurations tailored specifically to your codebase.
+                  With its intuitive user interface, setting up automated pipelines becomes a breeze, allowing your team to focus on what they do best—building innovative solutions. The Genie automates repetitive tasks, ensuring that every code change is tested, built, and deployed efficiently and reliably. Thanks to its robust notification system,
                 </p>
               </div>
             </motion.div>
@@ -319,19 +357,15 @@ const LandingPage: React.FC = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
             >
               <motion.div 
-                className="bg-indigo-200 text-black text-2xl rounded-md px-4 py-1 font-medium inline-block mb-4"
+                className="bg-indigo-200 text-indigo-900 rounded-md px-4 py-1 text-sm font-medium inline-block mb-4"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                 Multi-Platform Generation
+                LorenIpsum
               </motion.div>
               <div className="bg-gray-800 rounded-lg p-6 h-full border border-gray-700 shadow-xl">
                 <p className="text-gray-200 leading-relaxed">
-                With its intuitive user interface, setting up automated pipelines becomes a breeze, 
-                allowing your team to focus on what they do best—building innovative solutions. The Genie automates repetitive tasks, 
-                ensuring that every code change is tested, built, and deployed efficiently and reliably. Generate production-ready 
-                configuration files for GitHub Actions, GitLab CI, or Jenkins with a single click, 
-                and easily save your configurations for future reference or sharing with your team.
+                  With its intuitive user interface, setting up automated pipelines becomes a breeze, allowing your team to focus on what they do best—building innovative solutions. The Genie automates repetitive tasks, ensuring that every code change is tested, built, and deployed efficiently and reliably. Thanks to its robust notification system,
                 </p>
               </div>
             </motion.div>
@@ -451,13 +485,17 @@ const LandingPage: React.FC = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="mt-6 flex space-x-4"
             >
-              
-              <a href="https://x.com/_AdityaSingh_9" className="text-gray-400 hover:text-indigo-300 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-indigo-300 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                </svg>
+              </a>
+              <a href="#" className="text-gray-400 hover:text-indigo-300 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
                 </svg>
               </a>
-              <a href="https://www.linkedin.com/in/aditya-singh-dsa/" className="text-gray-400 hover:text-indigo-300 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-indigo-300 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
                   <rect x="2" y="9" width="4" height="12"></rect>
@@ -478,113 +516,8 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
       </footer>
-
-      {/* Auth Modal */}
-      {showAuthOptions && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <motion.div 
-            className="absolute inset-0 bg-black opacity-70"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.7 }}
-            onClick={closeAuthOptions}
-          />
-          
-          <motion.div 
-            className="bg-gray-900 rounded-xl p-8 w-full max-w-md z-10 border border-gray-700 shadow-2xl relative"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", duration: 0.5 }}
-          >
-            <button 
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
-              onClick={closeAuthOptions}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-            
-            <div className="text-center mb-8">
-              <motion.div
-                className="mx-auto mb-4 w-16 h-16 flex items-center justify-center"
-                animate={{
-                  y: [0, -5, 0],
-                  rotate: [0, 5, 0, -5, 0]
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-lg">
-                  <rect x="3" y="11" width="18" height="10" rx="2" />
-                  <circle cx="12" cy="5" r="2" />
-                  <path d="M12 7v4" />
-                  <line x1="8" y1="16" x2="8" y2="16" />
-                  <line x1="16" y1="16" x2="16" y2="16" />
-                  <path d="M9 21v-2" />
-                  <path d="M15 21v-2" />
-                </svg>
-              </motion.div>
-              
-              <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-indigo-200">
-                Sign in to CI/CD Genie
-              </h3>
-              <p className="text-gray-400 mt-2">
-                Choose your preferred authentication method
-              </p>
-            </div>
-            
-            <div className="space-y-4">
-              {/* GitHub Button */}
-              <motion.button
-                className="flex items-center justify-center gap-3 bg-gray-800 text-white px-6 py-3 rounded-lg font-medium text-lg w-full border border-gray-700"
-                onClick={() => handleSignIn("github")}
-                disabled={isLoading.github}
-                whileHover={{ scale: 1.02, backgroundColor: "#1f2937" }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Github className="h-5 w-5" />
-                {isLoading.github ? "Connecting..." : "Sign in with GitHub"}
-              </motion.button>
-
-              {/* GitLab Button */}
-              <motion.button
-                className="flex items-center justify-center gap-3 bg-orange-700 text-white px-6 py-3 rounded-lg font-medium text-lg w-full"
-                onClick={() => handleSignIn("gitlab")}
-                disabled={isLoading.gitlab}
-                whileHover={{ scale: 1.02, backgroundColor: "#c2410c" }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <GitlabIcon className="h-5 w-5" />
-                {isLoading.gitlab ? "Connecting..." : "Sign in with GitLab"}
-              </motion.button>
-
-              {/* Bitbucket Button */}
-              <motion.button
-                className="flex items-center justify-center gap-3 bg-blue-700 text-white px-6 py-3 rounded-lg font-medium text-lg w-full"
-                onClick={() => handleSignIn("bitbucket")}
-                disabled={isLoading.bitbucket}
-                whileHover={{ scale: 1.02, backgroundColor: "#1d4ed8" }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <GithubIcon className="h-5 w-5" />
-                {isLoading.bitbucket ? "Connecting..." : "Sign in with Bitbucket"}
-              </motion.button>
-            </div>
-            
-            <div className="mt-6 text-center">
-              <p className="text-gray-400 text-sm">
-                By signing in, you agree to our <a href="#" className="text-indigo-300 hover:text-indigo-200">Terms of Service</a> and <a href="#" className="text-indigo-300 hover:text-indigo-200">Privacy Policy</a>
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 };
 
-export default LandingPage;
+export default HomePage;
