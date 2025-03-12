@@ -278,10 +278,7 @@ const LandingPage: React.FC = () => {
               </motion.div>
               <div className="bg-gray-800 rounded-lg p-6 h-full border border-gray-700 shadow-xl">
                 <p className="text-gray-200 leading-relaxed">
-                With its intuitive user interface, setting up automated pipelines becomes a breeze, allowing your team to focus on what they 
-                do best—building innovative solutions. The Genie automates repetitive tasks, ensuring that every code change is tested,
-                 built, and deployed efficiently and reliably. Our drag-and-drop workflow editor makes complex CI/CD configuration
-                  accessible to everyone on your team, regardless of their DevOps experience.
+                With its intuitive user interface, setting up automated pipelines becomes a breeze, allowing your team to focus on what they do best—building innovative solutions. The Genie automates repetitive tasks, ensuring that every code change is tested, built, and deployed efficiently and reliably. Thanks to its robust notification system, your team stays informed at every step of the delivery process.
                 </p>
               </div>
             </motion.div>
@@ -303,9 +300,7 @@ const LandingPage: React.FC = () => {
               </motion.div>
               <div className="bg-gray-800 rounded-lg p-6 h-full border border-gray-700 shadow-xl">
                 <p className="text-gray-200 leading-relaxed">
-                With its intuitive user interface, setting up automated pipelines becomes a 
-                breeze, allowing your team to focus on what they do best—building innovative solutions. The Genie automates repetitive tasks, ensuring that every code change is tested, built, and deployed efficiently and reliably. Our smart repository analyzer automatically detects your project structure, technologies, and existing workflows to
-                 recommend optimized CI/CD configurations tailored specifically to your codebase.
+                With intelligent repository scanning, CI/CD Genie analyzes your codebase to automatically recommend the optimal workflow configuration. It detects your programming languages, dependencies, and existing CI/CD setups to suggest the most effective pipeline structure. No more guesswork—just smart, data-driven recommendations that understand your project's unique requirements and technology stack.
                 </p>
               </div>
             </motion.div>
@@ -327,11 +322,7 @@ const LandingPage: React.FC = () => {
               </motion.div>
               <div className="bg-gray-800 rounded-lg p-6 h-full border border-gray-700 shadow-xl">
                 <p className="text-gray-200 leading-relaxed">
-                With its intuitive user interface, setting up automated pipelines becomes a breeze, 
-                allowing your team to focus on what they do best—building innovative solutions. The Genie automates repetitive tasks, 
-                ensuring that every code change is tested, built, and deployed efficiently and reliably. Generate production-ready 
-                configuration files for GitHub Actions, GitLab CI, or Jenkins with a single click, 
-                and easily save your configurations for future reference or sharing with your team.
+                Generate production-ready configuration files for any major CI/CD platform with a single click. Whether you use GitHub Actions, GitLab CI, or Jenkins, CI/CD Genie speaks the native language of your chosen platform. Save configurations for later, share them with your team, or modify them as your project evolves. Seamlessly switch between platforms without rewriting your entire workflow from scratch.
                 </p>
               </div>
             </motion.div>
