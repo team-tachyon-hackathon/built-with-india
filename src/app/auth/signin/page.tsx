@@ -32,7 +32,7 @@ const LandingPage: React.FC = () => {
   
   const handleSignIn = async (provider: "github" | "gitlab" | "bitbucket") => {
     setIsLoading((prev) => ({ ...prev, [provider]: true }));
-    await signIn(provider, { callbackUrl: "/" });
+    await signIn(provider);
   };
   
   const closeAuthOptions = () => {
