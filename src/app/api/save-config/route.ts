@@ -2,12 +2,12 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
     // Get the current user session
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(requireAuth);
     
     // Check if the user is authenticated
     if (!session || !session.user) {
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     // Get the current user session
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(requireAuth);
     
     // Check if the user is authenticated
     if (!session || !session.user) {
