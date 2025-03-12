@@ -1,10 +1,24 @@
 // src/app/api/save-config/route.ts
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
+    // Get the current user session
+    const session = await getServerSession(authOptions);
+    
+    // Check if the user is authenticated
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
     const { yaml, provider, projectName, savedAt } = await request.json();
+    const userId = session.user.id;
 
     // Validation
     if (!yaml) {
@@ -24,8 +38,9 @@ export async function POST(request: Request) {
     // Connect to MongoDB
     const { db } = await connectToDatabase();
     
-    // Create a new document in the cicd_configs collection
+    // Create a new document in the cicd_configs collection with user ID
     const result = await db.collection('cicd_configs').insertOne({
+      userId,
       yaml,
       provider,
       projectName: projectName || 'Unknown Project',
@@ -52,12 +67,25 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
+    // Get the current user session
+    const session = await getServerSession(authOptions);
+    
+    // Check if the user is authenticated
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
+    const userId = session.user.id;
+    
     // Connect to MongoDB
     const { db } = await connectToDatabase();
     
-    // Get the latest 10 saved configurations
+    // Get the latest 10 saved configurations for the current user
     const configs = await db.collection('cicd_configs')
-      .find({})
+      .find({ userId })
       .sort({ createdAt: -1 })
       .limit(10)
       .toArray();
