@@ -80,7 +80,7 @@ The YAML should be production-ready and follow best practices for ${ciProvider}.
 `;
 
     // Make API call to Gemini API
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${process.env.GEMINI_API_KEY}`;
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
