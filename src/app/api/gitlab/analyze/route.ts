@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   }
 
   const GITLAB_TOKEN = process.env.GITLAB_ACCESS_TOKENS;
-  const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
   const url = `https://gitlab.com/api/v4/projects/${encodeURIComponent(owner)}%2F${encodeURIComponent(repo)}/repository/tree?recursive=true`;
 
@@ -61,41 +61,67 @@ export async function GET(req: NextRequest) {
       hasCiCdConfig,
     };
 
-    // DEEPSEEK usage for analysis
-    const deepSeekResponse = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "deepseek/deepseek-r1:free",
-        messages: [
+
+    const prompt = `
+      Analyze this GitLab repository based on the structured data provided below.
+      Provide a concise summary and key recommendations for building an optimal CI/CD pipeline.
+      Focus on suggesting best practices and suitable stages given the detected environment.
+      
+      ANALYSIS DATA:
+      ${JSON.stringify(analysisData, null, 2)}
+    `;
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${GEMINI_API_KEY}`;
+    
+    const geminiResponse = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [
           {
             role: "user",
-            content: `Analyze this GitLab repo and provide insights:
-            ${JSON.stringify(analysisData, null, 2)}`,
-          },
+            parts: [
+              {
+                text: prompt
+              }
+            ]
+          }
         ],
-        top_p: 0.99,
-        temperature: 0.63,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-        repetition_penalty: 1,
-        top_k: 0,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+        generationConfig: {
+          temperature: 0.63,
+          maxOutputTokens: 2048
+        }
+      })
+    });
+
+    if (!geminiResponse.ok) {
+      const errorData = await geminiResponse.json();
+      throw new Error(`Gemini API error during analysis: ${geminiResponse.status} ${JSON.stringify(errorData)}`);
+    }
+
+    const geminiData = await geminiResponse.json();
+    const geminiAnalysis = geminiData.candidates[0].content.parts[0].text;
 
     return NextResponse.json({
       ...analysisData,
-      deepSeekAnalysis: deepSeekResponse.data.choices[0].message.content,
+      geminiAnalysis: geminiAnalysis, // Renamed key to geminiAnalysis for consistency
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error:", error);
+    // Handle specific GitLab access issues if possible
+    let errorMessage = "Failed to fetch repo or analyze with AI";
+    if (error.response?.status === 404) {
+        errorMessage = "GitLab Repository not found. Please check the owner/project name.";
+    } else if (error.response?.status === 403) {
+        errorMessage = "Access forbidden. Ensure the GITLAB_ACCESS_TOKENS is valid and has read_repository scope.";
+    } else if (error.code === 'ECONNABORTED') {
+        errorMessage = "Request timed out. The repository might be too large.";
+    }
+
     return NextResponse.json(
-      { error: "Failed to fetch repo or analyze with AI" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

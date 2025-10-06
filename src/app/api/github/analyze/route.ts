@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   }
 
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-  const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
   const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/main?recursive=1`;
 
@@ -60,37 +60,51 @@ export async function GET(req: NextRequest) {
       hasDockerfile,
       hasCiCdConfig,
     };
+    
+    const prompt = `
+      Analyze this GitHub repository based on the structured data provided below.
+      Provide a concise summary and key recommendations for building an optimal CI/CD pipeline.
+      
+      ANALYSIS DATA:
+      ${JSON.stringify(analysisData, null, 2)}
+      `;
 
-    //DEEPSEEK usage for analysis
-    const deepSeekResponse = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "deepseek/deepseek-r1:free",
-        messages: [
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${GEMINI_API_KEY}`;
+
+    const geminiResponse = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [
           {
             role: "user",
-            content: `Analyze this GitHub repo and provide insights:
-            ${JSON.stringify(analysisData, null, 2)}`
+            parts: [
+              {
+                text: prompt
+              }
+            ]
           }
         ],
-        top_p: 0.99,
-        temperature: 0.63,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-        repetition_penalty: 1,
-        top_k: 0
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+        generationConfig: {
+          temperature: 0.63,
+          maxOutputTokens: 2048
+        }
+      })
+    });
+
+    if (!geminiResponse.ok) {
+      const errorData = await geminiResponse.json();
+      throw new Error(`Gemini API error during analysis: ${geminiResponse.status} ${JSON.stringify(errorData)}`);
+    }
+
+    const geminiData = await geminiResponse.json();
+    const geminiAnalysis = geminiData.candidates[0].content.parts[0].text;
 
     return NextResponse.json({
       ...analysisData,
-      deepSeekAnalysis: deepSeekResponse.data.choices[0].message.content,
+      geminiAnalysis: geminiAnalysis,
     });
   } catch (error) {
     console.error("Error:", error);

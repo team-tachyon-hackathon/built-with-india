@@ -4,12 +4,14 @@
 import SavedConfigDetail from '@/components/SavedConfigDetail';
 import SavedConfigsNav from '@/components/SavedConfigsNav';
 
-export default function SavedConfigDetailPage({ params }) {
+
+
+export default function SavedConfigDetailPage() {
   return (
     <div>
       <SavedConfigsNav />
       <div className="container mx-auto py-8">
-        <SavedConfigDetail id={params.id} />
+        <SavedConfigDetail />
       </div>
     </div>
   );
